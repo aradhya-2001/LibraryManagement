@@ -30,19 +30,15 @@ public class BookService
 
     public BookCreationResponse addBook(BookCreationRequest req)
     {
-        // if author is not present then only save data
-        Author authorFromDb = authorService.findAuthorInDb(req.getAuthorEmail());
-        if(authorFromDb == null)
-        {
-            authorFromDb = authorService.saveAuthor(Author.builder()
-                            .id(UUID.randomUUID().toString())
-                            .email(req.getAuthorEmail())
-                            .name(req.getAuthorName())
-                            .build());
+        Author authorFromDb = authorService.findAuthorInDb(req.getAuthorEmail()); // if author is not present then only save data
+
+        if(authorFromDb == null) {
+            authorFromDb = req.toAuthor();
         }
+
         Book book = req.toBook();
         book.setAuthor(authorFromDb);
-        bookRepository.save(book);
+        bookRepository.save(book); // while saving the book, author will also get saved coz of CASCADE.ALL
         return book.toBookCreationResponse();
     }
 

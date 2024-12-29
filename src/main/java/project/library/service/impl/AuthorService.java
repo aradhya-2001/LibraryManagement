@@ -14,8 +14,4 @@ public class AuthorService {
     public Author findAuthorInDb(String authorEmail) {
         return authorRepository.findByEmail(authorEmail);
     }
-
-    public Author saveAuthor(Author author) {
-        return authorRepository.save(author);
-    }
 }

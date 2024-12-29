@@ -1,5 +1,6 @@
 package project.library.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import project.library.dto.user.UserCreationResponse;

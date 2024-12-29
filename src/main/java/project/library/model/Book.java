@@ -1,5 +1,6 @@
 package project.library.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import project.library.dto.book.BookCreationResponse;
@@ -36,9 +37,10 @@ public class Book extends TimeStamp
 
     @ManyToOne // Many Book, One User
     @JoinColumn // This will make @ID (by default) of User as a column in the Book db table as a foreign key. This is only used in the owning side of the relationship.
+    @JsonIgnoreProperties(value = "bookList") // working the same as JsonIgnore but here told in advance not to include bookList member of User entity if the whole Book entity is being returned as response
     private User user;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL) // update Author DB table whenever Book entity is being updated
     @JoinColumns({
             @JoinColumn(name = "author_id", referencedColumnName = "id"), // db column name will be author_id
             @JoinColumn(name = "author_email", referencedColumnName = "email")

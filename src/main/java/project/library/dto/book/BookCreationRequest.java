@@ -5,7 +5,10 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
 import project.library.enums.BookType;
+import project.library.model.Author;
 import project.library.model.Book;
+
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -41,5 +44,14 @@ public class BookCreationRequest
                 .bookType(this.bookType)
                 .securityAmt(this.securityAmt)
                 .build();
+    }
+
+    public Author toAuthor()
+    {
+       return Author.builder()
+               .id(UUID.randomUUID().toString())
+               .email(this.authorEmail)
+               .name(this.authorName)
+               .build();
     }
 }
