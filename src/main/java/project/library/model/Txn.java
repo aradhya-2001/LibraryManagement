@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import project.library.enums.TxnStatus;
 
+import java.util.Date;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -23,6 +25,9 @@ public class Txn extends TimeStamp
     private TxnStatus txnStatus;
 
     private Double settlementAmt; // depends upon when the book is being returned.
+
+    private Date issueDate;
+    private Date submitDate;
 
     @ManyToOne
     @JoinColumn

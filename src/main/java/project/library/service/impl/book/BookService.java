@@ -1,5 +1,6 @@
 package project.library.service.impl.book;
 
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import project.library.dto.book.BookCreationRequest;
@@ -9,6 +10,7 @@ import project.library.enums.BookFilter;
 import project.library.enums.Operator;
 import project.library.model.Author;
 import project.library.model.Book;
+import project.library.model.User;
 import project.library.repository.BookRepository;
 import project.library.service.BookFilterStrategy;
 import project.library.service.impl.AuthorService;
@@ -46,5 +48,20 @@ public class BookService
     {
         BookFilterStrategy strategy = bookFilterFactory.getStrategy(filterBy);
         return strategy.getFilteredBook(operator, value);
+    }
+
+    public Book isValid( String bookNum)
+    {
+        List<Book> books = bookRepository.findByBookNum(bookNum);
+        if(books.isEmpty()) {
+            return null;
+        }
+        return books.get(0);
+    }
+
+    public void mapBookToUser(Book bookFromDb, User userFomDB) // updating a row (user_id) into the book table
+    {
+        bookFromDb.setUser(userFomDB);
+        bookRepository.save(bookFromDb);
     }
 }

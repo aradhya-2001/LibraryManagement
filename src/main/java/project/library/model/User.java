@@ -41,15 +41,6 @@ public class User extends TimeStamp
     @Enumerated
     private UserType userType;
 
-    /*
-    @OneToMany:
-    One User, Many Books.
-    (mappedBy = "user"):
-    This tells JPA/Hibernate that in the bidirectional relationship btw User and Book, the owning side is Book (the owner will be a field/variable "user") and the inverse side is User.
-    Owning side means a foreign key column will be created in the Book table db with id of User like user_id.
-    So User will be linked to Book via the foreign key present in the Book table.
-    And also, it tells JPA to not create a new column in User for the relationship instead to use the existing foreign key (user_id) in Book table.
-    */
     @OneToMany(mappedBy = "user")
     private List<Book> bookList;
 
@@ -77,3 +68,13 @@ public class User extends TimeStamp
                 .build();
     }
 }
+
+    /*
+    @OneToMany:
+    One User, Many Books.
+    (mappedBy = "user"):
+    This tells JPA/Hibernate that in the bidirectional relationship btw User and Book, the owning side is Book (the owner will be a field/variable "user") and the inverse side is User.
+    Owning side means a foreign key column will be created in the Book table db with id of User like user_id.
+    So User will be linked to Book via the foreign key present in the Book table.
+    And also, it tells JPA to not create a new column in User for the relationship instead to use the existing foreign key (user_id) in Book table.
+    */

@@ -1,5 +1,6 @@
 package project.library.service.impl.user;
 
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import project.library.dto.user.UserCreationRequest;
@@ -37,5 +38,14 @@ public class UserService
     {
         UserFilterStrategy strategy = userFilterFactory.getStrategy(filterBy);
         return strategy.getFilteredUser(operator, value);
+    }
+
+    public User isValid(String userEmail)
+    {
+      List<User> users = userRepository.findByEmail(userEmail);
+      if(users.isEmpty()) {
+          return null;
+      }
+      return users.get(0);
     }
 }
