@@ -26,7 +26,7 @@ public class Author extends TimeStamp
     @Column(length = 50)
     private String name;
 
-    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL) // update Book DB table whenever Author entity is being updated
+    @OneToMany(mappedBy = "author") // update Book DB table whenever Author entity is being updated
     @JsonIgnore
     private List<Book> bookList;
 }

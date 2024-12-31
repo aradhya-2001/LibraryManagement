@@ -1,12 +1,15 @@
 package project.library.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import project.library.dto.TxnRequest;
+import project.library.dto.txn.TxnCreateRequest;
+import project.library.dto.txn.TxnReturnRequest;
 import project.library.enums.TxnStatus;
 import project.library.exception.BookException;
+import project.library.exception.TxnException;
 import project.library.exception.UserException;
 import project.library.model.Book;
 import project.library.model.Txn;
@@ -17,6 +20,7 @@ import project.library.service.impl.user.UserService;
 
 import java.util.Date;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class TxnService
@@ -30,41 +34,98 @@ public class TxnService
     @Autowired
     private BookService bookService;
 
-    @Transactional(rollbackFor = {BookException.class, UserException.class})
-    public String create(TxnRequest txnRequest) throws UserException, BookException
-    {
-        User userFomDB = userService.isValid(txnRequest.getUserEmail());
-        if(userFomDB == null) { // check if user is valid (exist in DB) or not
-            throw new UserException("User is not valid");
-        }
+    @Value("${book.validIssueDays}") // book.validIssueDays defined in application.properties
+    private int validDays;
 
-        Book bookFromDb = bookService.isValid(txnRequest.getBookNum());
-        if(bookFromDb == null) {
-            throw new BookException("Book is not valid");
-        }
+    @Value("${book.fineRate}")
+    private int fineRate;
+
+    @Transactional
+    public String create(TxnCreateRequest req) throws BookException, UserException
+    {
+        User userFomDB = userService.isValid(req.getUserEmail());
+        Book bookFromDb = bookService.isValid(req.getBookNum());
+
+        nullCheck(userFomDB, bookFromDb);
 
         if(bookFromDb.getUser() != null) { // check if the book asked by the user is already assigned to another user
             throw new BookException("Book is not free to be issued");
         }
 
-        return createTnx(bookFromDb, userFomDB);
-    }
-
-    @Transactional
-    private String createTnx(Book book, User user)
-    {
         String txnId = UUID.randomUUID().toString();
         Txn txn = Txn.builder()
                 .txnId(txnId)
-                .book(book)
-                .user(user)
+                .book(bookFromDb)
+                .user(userFomDB)
                 .txnStatus(TxnStatus.ISSUED)
                 .issueDate(new Date())
                 .build();
 
         txnRepository.save(txn);
-        bookService.mapBookToUser(book, user);
+        bookService.mapBookToUser(bookFromDb, userFomDB); // mark book as unavailable
         return txnId;
+    }
+
+    @Transactional
+    public int returnTxn(TxnReturnRequest req) throws BookException, UserException
+    {
+        Txn txnFromDb = txnRepository.findByTxnId(req.getTxnId());
+        if(txnFromDb == null) {
+            throw new TxnException("No txn has been found in the db with txnId: " + req.getTxnId()); // this is a run time exception, so it will by default gets rolled out if exception comes.
+        }
+
+        User userFromDb = userService.isValid(txnFromDb.getUser().getEmail());
+        Book bookFromDb = bookService.isValid(req.getBookNum());
+
+        nullCheck(userFromDb, bookFromDb);
+
+        if(bookFromDb.getUser() != null && bookFromDb.getUser().equals(userFromDb))
+        {
+            Integer securityAmt = bookFromDb.getSecurityAmt();
+            int amt = settlementAmt(txnFromDb.getIssueDate(), securityAmt);
+            txnFromDb.setSettlementAmt(amt);
+
+            if(amt == securityAmt) {
+                txnFromDb.setTxnStatus(TxnStatus.RETURNED);
+            } else if (amt < securityAmt) {
+                txnFromDb.setTxnStatus(TxnStatus.FINED);
+            }
+
+            bookFromDb.setUser(null); // book is being returned so, making it available
+            txnFromDb.setSubmitDate(new Date());
+            txnRepository.save(txnFromDb); // this will also save book in Db coz of Cascade.ALL for Book in Txn entity
+
+            return amt;
+        }
+        throw new TxnException("Book is assigned to someone else or not assigned to user: " + userFromDb.getName());
+    }
+
+    private int settlementAmt(Date issueDate, Integer securityAmt)
+    {
+        long issueTime = issueDate.getTime(); // gives milliseconds
+        long returnTime = System.currentTimeMillis(); // gives milliseconds
+        long timeDiff = returnTime - issueTime;
+        int daysPassed = (int) TimeUnit.DAYS.convert(timeDiff, TimeUnit.MILLISECONDS);
+
+        if(daysPassed > validDays)
+        {
+            int fineAmt = (daysPassed - validDays) * fineRate;
+            return securityAmt - fineAmt;
+        }
+
+        return securityAmt;
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY, rollbackFor = {BookException.class, UserException.class})
+    private void nullCheck(User user, Book book) throws UserException, BookException
+    {
+        if(user == null) { // check if user is valid (exist in DB) or not
+            throw new UserException("User is not valid");
+        }
+
+        if(book == null) {
+            throw new BookException("Book is not valid");
+        }
     }
 }
 

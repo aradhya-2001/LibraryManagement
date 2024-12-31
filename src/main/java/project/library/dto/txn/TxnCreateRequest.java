@@ -1,4 +1,4 @@
-package project.library.dto;
+package project.library.dto.txn;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -9,7 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 @Builder
-public class TxnRequest
+public class TxnCreateRequest
 {
     @NotBlank(message = "User Email must not be blank")
     private String userEmail;

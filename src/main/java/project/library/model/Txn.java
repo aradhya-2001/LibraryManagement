@@ -24,7 +24,7 @@ public class Txn extends TimeStamp
     @Enumerated
     private TxnStatus txnStatus;
 
-    private Double settlementAmt; // depends upon when the book is being returned.
+    private Integer settlementAmt; // depends upon when the book is being returned.
 
     private Date issueDate;
     private Date submitDate;
@@ -33,7 +33,7 @@ public class Txn extends TimeStamp
     @JoinColumn
     private User user;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn
     private Book book;
 }

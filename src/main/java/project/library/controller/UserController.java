@@ -20,8 +20,8 @@ public class UserController
     @Autowired
     private UserService userService;
 
-    @PostMapping("/addStudent")
-    public UserCreationResponse addStudent(@RequestBody @Validated UserCreationRequest req) {
+    @PostMapping("/addUser")
+    public UserCreationResponse addUser(@RequestBody @Validated UserCreationRequest req) {
         return userService.addStudent(req);
     }
 
