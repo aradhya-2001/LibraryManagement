@@ -100,6 +100,7 @@ public class TxnService
         throw new TxnException("Book is assigned to someone else or not assigned to user: " + userFromDb.getName());
     }
 
+    // no interaction with db so no need of @Transactional
     private int settlementAmt(Date issueDate, Integer securityAmt)
     {
         long issueTime = issueDate.getTime(); // gives milliseconds
@@ -134,4 +135,16 @@ public class TxnService
 Until reached to last line of func, not do anything.
 By default, if there come some Runtime exceptions anywhere in func, nothing will be committed /it will get roll backed.
 But if it encounters a Compile time exception, statements after that exception will not be executed, but after compilation, it will not get rolled back i.e., statements before exception will get executed.
+
+createTransactionIfNecessary();
+try {
+    callMethod();
+    commitTransactionAfterReturning();
+} catch (exception) {
+  completeTransactionAfterThrowing();
+    throw exception;
+}
+Above is how @Transactional is working.
+A proxy class is created which will have code like above and spring will run that class at runtime.
+AOP works in the same way, so @Transactional is internally using AOP.
 */

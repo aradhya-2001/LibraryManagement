@@ -27,8 +27,6 @@ public class UserService
     public UserCreationResponse addStudent(UserCreationRequest req)
     {
         User user = req.toUser();
-        user.setUserType(UserType.STUDENT);
-
         userRepository.save(user);
 
         return user.toUserCreationResponse();

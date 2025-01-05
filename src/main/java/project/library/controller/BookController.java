@@ -3,8 +3,11 @@ package project.library.controller;
 
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import project.library.dto.GenericReturn;
 import project.library.dto.book.BookCreationRequest;
 import project.library.dto.book.BookCreationResponse;
 import project.library.dto.book.BookFilterResponse;
@@ -23,8 +26,19 @@ public class BookController
     private BookService bookService;
 
     @PostMapping("/addBook")
-    public BookCreationResponse addBook(@RequestBody BookCreationRequest req) {
-        return bookService.addBook(req);
+    public ResponseEntity<GenericReturn> addBook(@RequestBody BookCreationRequest req)
+    {
+        BookCreationResponse response = bookService.addBook(req);
+        GenericReturn returnObject = GenericReturn.builder().data(response).build();
+
+        if(response != null){
+            returnObject.setCode(0);
+            returnObject.setMsg("Its successful");
+        }else{
+            returnObject.setCode(1);
+            returnObject.setMsg("Its failed");
+        }
+        return new ResponseEntity<>(returnObject, HttpStatus.OK);
     }
 
     @GetMapping("/filter")
